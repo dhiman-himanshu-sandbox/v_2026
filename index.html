@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Will You Be My Valentine?</title>
+    <title>Hi Preksha, Will You Be My Valentine?</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -48,7 +48,7 @@
             max-width: 500px;
             width: 90%;
             position: relative;
-            z-index: 100; /* Card is Layer 100 */
+            z-index: 100;
             backdrop-filter: blur(10px);
             animation: slideIn 0.6s ease-out;
         }
@@ -99,7 +99,6 @@
             align-items: center;
             min-height: 60px;
             margin-top: 30px;
-            /* Important: This placeholder keeps the space open for the buttons */
             position: relative; 
             z-index: 101;
         }
@@ -124,9 +123,8 @@
 
         #noBtn {
             background: linear-gradient(135deg, #d3d3d3 0%, #a8a8a8 100%);
-            /* NUCLEAR Z-INDEX: Ensures it is ALWAYS on top of the card */
+            /* FIXED: Removed 'position: fixed' so it starts side-by-side */
             z-index: 999999 !important; 
-            position: fixed; /* Start as fixed so we control it completely */
         }
 
         .no-message {
@@ -138,7 +136,7 @@
             border-radius: 25px;
             font-size: 16px;
             white-space: nowrap;
-            z-index: 1000000; /* Higher than button */
+            z-index: 1000000;
             box-shadow: 0 4px 15px rgba(255, 20, 147, 0.3);
             font-weight: 600;
             pointer-events: none;
@@ -194,7 +192,6 @@
         const buttonContainer = document.querySelector('.button-container');
         const heartBg = document.getElementById('heartBg');
         
-        // Background Hearts
         const hearts = ['💕', '💖', '💗', '💓', '💝', '❤️', '💘'];
         for (let i = 0; i < 15; i++) {
             const heart = document.createElement('div');
@@ -215,27 +212,32 @@
             "Come on! 🙏", "Think about it... ❤️", "You'll regret this! 😭"
         ];
 
-        // --- THE MAGIC FIX: TELEPORT BUTTON ON LOAD ---
-        // This ensures the button is NEVER trapped inside the card's layering
+        // --- THE FIX: TELEPORT BUTTON ON LOAD (WITH GHOST SPACER) ---
         window.onload = function() {
-            // 1. Where is the button currently sitting? (Inside the flex container)
+            // 1. Get exact position of the No button while it's still side-by-side
             const rect = noBtn.getBoundingClientRect();
             
-            // 2. Teleport it to the main body
+            // 2. Create a "Ghost" button to fill the empty space
+            // This stops the Yes button from jumping to the center
+            const ghostBtn = document.createElement('div');
+            ghostBtn.style.width = rect.width + 'px';
+            ghostBtn.style.height = rect.height + 'px';
+            ghostBtn.style.display = 'inline-block';
+            
+            // Insert ghost before removing the real button
+            noBtn.parentNode.insertBefore(ghostBtn, noBtn);
+
+            // 3. Teleport real button to body
             document.body.appendChild(noBtn);
             
-            // 3. Set it to FIXED position at the exact same spot so it looks like it never moved
+            // 4. Lock it in the exact same visual position
             noBtn.style.position = "fixed";
             noBtn.style.left = rect.left + "px";
             noBtn.style.top = rect.top + "px";
         };
 
-        // Handle Window Resize (Snap button back if user resizes window before clicking)
         window.addEventListener('resize', () => {
             isMobile = window.innerWidth <= 768;
-            // Optional: If you want the button to re-align next to Yes on resize, 
-            // you'd need complex logic. But since it runs away on hover, 
-            // simpler is better: just let it stay where it is.
         });
 
         // --- INTERACTION LOGIC ---
@@ -243,7 +245,7 @@
             noBtn.addEventListener('click', handleNoInteraction);
         } else {
             noBtn.addEventListener('mouseenter', handleNoInteraction);
-            noBtn.addEventListener('click', (e) => e.preventDefault()); // Just in case
+            noBtn.addEventListener('click', (e) => e.preventDefault());
         }
 
         function handleNoInteraction(e) {
@@ -254,18 +256,15 @@
         }
 
         function moveButton() {
-            // Calculate safe boundaries
             const padding = 20;
             const btnWidth = noBtn.offsetWidth || 100;
             const btnHeight = noBtn.offsetHeight || 50;
-            
             const maxX = window.innerWidth - btnWidth - padding;
             const maxY = window.innerHeight - btnHeight - padding;
 
             const randomX = Math.max(padding, Math.random() * maxX);
             const randomY = Math.max(padding, Math.random() * maxY);
 
-            // Apply new position
             noBtn.style.left = randomX + 'px';
             noBtn.style.top = randomY + 'px';
         }
@@ -283,13 +282,11 @@
             messageEl.textContent = message;
             messageEl.style.display = 'block';
             
-            // Place message above the button's NEW position
-            // We read the style.left/top directly because we just set them
             const btnLeft = parseFloat(noBtn.style.left);
             const btnTop = parseFloat(noBtn.style.top);
             
-            messageEl.style.left = (btnLeft + 20) + 'px'; // slightly offset
-            messageEl.style.top = (btnTop - 50) + 'px';   // above
+            messageEl.style.left = (btnLeft + 20) + 'px';
+            messageEl.style.top = (btnTop - 50) + 'px';
             
             noClickCount++;
         }
@@ -304,7 +301,7 @@
             document.querySelector('.emoji').style.display = 'none';
             document.querySelector('.message').style.display = 'none';
             buttonContainer.style.display = 'none';
-            noBtn.style.display = 'none'; // Hide the floating button
+            noBtn.style.display = 'none';
             
             const msg = document.querySelector('.no-message');
             if(msg) msg.style.display = 'none';
