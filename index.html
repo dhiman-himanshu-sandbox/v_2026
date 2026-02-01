@@ -307,24 +307,42 @@
                 document.body.appendChild(messageEl);
             }
             
-            messageEl.innerHTML = ''; // Clear old content
-
+            // 1. Update content
+            messageEl.innerHTML = ''; 
             const imgEl = document.createElement('img');
             imgEl.src = content.img;
             messageEl.appendChild(imgEl);
-
             const textEl = document.createElement('div');
             textEl.textContent = content.text;
             messageEl.appendChild(textEl);
 
+            // 2. Make visible to calculate dimensions
             messageEl.style.display = 'flex';
             
-            const btnLeft = parseFloat(noBtn.style.left);
-            const btnTop = parseFloat(noBtn.style.top);
+            // 3. Get dimensions
+            const btnRect = noBtn.getBoundingClientRect();
+            const msgHeight = messageEl.offsetHeight;
+            const msgWidth = messageEl.offsetWidth;
+
+            // 4. Calculate Top Position (Smart Flip Logic)
+            // Default: Try to put it ABOVE the button
+            let topPos = btnRect.top - msgHeight - 20;
+
+            // FIX: If topPos is negative (cropped off top), put it BELOW the button instead
+            if (topPos < 10) {
+                topPos = btnRect.bottom + 20;
+            }
+
+            // 5. Calculate Left Position (Center relative to button)
+            let leftPos = btnRect.left + (btnRect.width / 2) - (msgWidth / 2);
+
+            // FIX: Prevent cropping on Left/Right edges
+            // Keep at least 10px from left edge, and don't go past right edge
+            leftPos = Math.max(10, Math.min(window.innerWidth - msgWidth - 10, leftPos));
             
-            // Center horizontally, place vertically above
-            messageEl.style.left = (btnLeft + (noBtn.offsetWidth / 2) - (messageEl.offsetWidth / 2)) + 'px';
-            messageEl.style.top = (btnTop - messageEl.offsetHeight - 20) + 'px';
+            // 6. Apply Positions
+            messageEl.style.top = topPos + 'px';
+            messageEl.style.left = leftPos + 'px';
             
             noClickCount++;
         }
